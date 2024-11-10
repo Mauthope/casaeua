@@ -6,22 +6,13 @@
     <title>Levantador de Preços para Construção</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #f7f7f7;
-            border-radius: 10px;
-        }
-        h2 { text-align: center; }
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; }
         label { display: block; margin-top: 10px; }
         input, select { width: 100%; padding: 8px; margin-top: 5px; }
-        button { margin-top: 15px; padding: 10px; background-color: #007bff; color: white; border: none; cursor: pointer; }
-        .resultado, .detalhesCategorias { margin-top: 20px; padding: 20px; background-color: #e9ecef; border-radius: 10px; }
+        button { margin-top: 20px; width: 100%; padding: 10px; background-color: #007bff; color: white; }
+        .resultado, #detalhesCategorias, #tabelaDetalhes { margin-top: 20px; }
         table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background-color: #007bff; color: white; }
+        th, td { border: 1px solid #ccc; padding: 8px; }
         canvas { margin-top: 30px; }
     </style>
 </head>
@@ -29,129 +20,135 @@
 
 <h2>Levantador de Preços para Construção</h2>
 
+<!-- ETAPA 1: Inserir Dados para Cálculos -->
 <form id="formulario">
     <label>Custo por Metro Quadrado (R$):</label>
     <input type="number" id="custoPorMetroQuadrado" required>
-    
+
     <label>Metros Quadrados:</label>
     <input type="number" id="metrosQuadrados" required>
-    
+
     <label>Custo do Terreno (R$):</label>
     <input type="number" id="custoTerreno" required>
-    
+
     <button type="button" onclick="calcular()">Calcular Total</button>
 </form>
 
-<div class="resultado" id="resultado" style="display: none;"></div>
+<!-- ETAPA 2: Exibir Resultados dos Cálculos -->
+<div class="resultado" id="resultado"></div>
 
-<div id="detalhesCategorias" class="detalhesCategorias" style="display: none;">
+<!-- ETAPA 3: Adicionar Itens por Categoria -->
+<div id="detalhesCategorias" style="display: none;">
     <h3>Adicionar Detalhes para Categoria</h3>
     <label>Selecionar Categoria:</label>
-    <select id="categoriaDetalhe">
-        <option value="Mobiliário">Mobiliário</option>
-        <option value="Paisagismo">Paisagismo</option>
-        <option value="Eletrônicos">Eletrônicos</option>
-    </select>
-    
+    <select id="categoriaDetalhe"></select>
+
     <label>Item:</label>
     <input type="text" id="itemDetalhe">
     
     <label>Valor (R$):</label>
     <input type="number" id="valorDetalhe">
-    
-    <button type="button" onclick="adicionarDetalhe()">Adicionar Item</button>
+
+    <button type="button" onclick="adicionarDetalhe()">Adicionar Detalhe</button>
 </div>
 
+<!-- Tabela para exibir itens adicionados -->
 <table id="tabelaDetalhes">
-    <tr>
-        <th>Categoria</th>
-        <th>Item</th>
-        <th>Valor (R$)</th>
-    </tr>
+    <tr><th>Categoria</th><th>Item</th><th>Valor (R$)</th></tr>
 </table>
 
+<!-- ETAPA 4: Gráfico de Gastos por Categoria -->
 <canvas id="graficoCategorias" width="400" height="200"></canvas>
 
 <script>
-let custos = {};
+let itens = [];
 let detalhes = {};
+let totalCalculado = 0;
 
+// Função para calcular o custo total
 function calcular() {
     const custoPorMetroQuadrado = parseFloat(document.getElementById("custoPorMetroQuadrado").value);
     const metrosQuadrados = parseFloat(document.getElementById("metrosQuadrados").value);
     const custoTerreno = parseFloat(document.getElementById("custoTerreno").value);
-    
-    if (isNaN(custoPorMetroQuadrado) || isNaN(metrosQuadrados) || isNaN(custoTerreno)) return;
-    
+
+    if (isNaN(custoPorMetroQuadrado) || isNaN(metrosQuadrados) || isNaN(custoTerreno)) {
+        alert("Por favor, insira todos os valores corretamente.");
+        return;
+    }
+
     const custoConstrucao = custoPorMetroQuadrado * metrosQuadrados;
     const custoTotal = custoConstrucao + custoTerreno;
-    const precoVenda = custoTotal * 2;
-    const impostos = precoVenda * 0.15;
-    const lucroLiquido = precoVenda - custoTotal - impostos;
-    
-    custos = { custoConstrucao, custoTerreno, custoTotal, precoVenda, impostos, lucroLiquido };
-    
-    mostrarResultados();
-    document.getElementById("detalhesCategorias").style.display = "block";
-}
+    const precoVenda = custoTotal * 2; // Preço de venda é o dobro do custo total
 
-function mostrarResultados() {
-    const resultadoDiv = document.getElementById("resultado");
-    resultadoDiv.style.display = "block";
-    resultadoDiv.innerHTML = `
-        <h3>Resultados</h3>
-        <p>Custo de Construção: R$ ${custos.custoConstrucao.toFixed(2)}</p>
-        <p>Custo do Terreno: R$ ${custos.custoTerreno.toFixed(2)}</p>
-        <p>Custo Total: R$ ${custos.custoTotal.toFixed(2)}</p>
-        <p>Preço de Venda: R$ ${custos.precoVenda.toFixed(2)}</p>
-        <p>Impostos (15%): R$ ${custos.impostos.toFixed(2)}</p>
-        <p>Lucro Líquido: R$ ${custos.lucroLiquido.toFixed(2)}</p>
+    totalCalculado = custoTotal;
+
+    document.getElementById("resultado").innerHTML = `
+        <div><b>Custo de Construção:</b> R$ ${custoConstrucao.toFixed(2)}</div>
+        <div><b>Custo do Terreno:</b> R$ ${custoTerreno.toFixed(2)}</div>
+        <div><b>Custo Total:</b> R$ ${custoTotal.toFixed(2)}</div>
+        <div><b>Preço de Venda:</b> R$ ${precoVenda.toFixed(2)}</div>
     `;
+
+    document.getElementById("detalhesCategorias").style.display = "block";
+    preencherCategoriasDetalhe();
 }
 
+// Função para adicionar um item detalhado por categoria
 function adicionarDetalhe() {
     const categoria = document.getElementById("categoriaDetalhe").value;
     const item = document.getElementById("itemDetalhe").value;
     const valor = parseFloat(document.getElementById("valorDetalhe").value);
     
-    if (!detalhes[categoria]) detalhes[categoria] = [];
-    if (item && !isNaN(valor)) {
+    if (!isNaN(valor) && item) {
+        if (!detalhes[categoria]) detalhes[categoria] = [];
         detalhes[categoria].push({ item, valor });
         atualizarTabelaDetalhes();
         renderizarGrafico();
     }
 }
 
+// Função para preencher as categorias na lista de detalhes
+function preencherCategoriasDetalhe() {
+    const select = document.getElementById("categoriaDetalhe");
+    select.innerHTML = "";
+    const categorias = ["Desenho", "Mobiliário", "Paisagismo", "Cercado", "Câmeras", "Placa Solar", "Portão Eletrônico", "Divulgação"];
+    categorias.forEach(categoria => {
+        const option = document.createElement("option");
+        option.value = categoria;
+        option.textContent = categoria;
+        select.appendChild(option);
+    });
+}
+
+// Função para atualizar a tabela de itens detalhados
 function atualizarTabelaDetalhes() {
     const tabela = document.getElementById("tabelaDetalhes");
     tabela.innerHTML = `<tr><th>Categoria</th><th>Item</th><th>Valor (R$)</th></tr>`;
-    
-    Object.keys(detalhes).forEach(categoria => {
-        detalhes[categoria].forEach(detalhe => {
-            tabela.innerHTML += `<tr><td>${categoria}</td><td>${detalhe.item}</td><td>R$ ${detalhe.valor.toFixed(2)}</td></tr>`;
+    Object.keys(detalhes).forEach(cat => {
+        detalhes[cat].forEach(detalhe => {
+            tabela.innerHTML += `<tr><td>${cat}</td><td>${detalhe.item}</td><td>R$ ${detalhe.valor.toFixed(2)}</td></tr>`;
         });
     });
 }
 
+// Função para renderizar o gráfico
 function renderizarGrafico() {
     const ctx = document.getElementById("graficoCategorias").getContext("2d");
     const categorias = Object.keys(detalhes);
     const valores = categorias.map(cat => detalhes[cat].reduce((acc, item) => acc + item.valor, 0));
-    
+
     new Chart(ctx, {
         type: 'bar',
         data: {
             labels: categorias,
             datasets: [{
-                label: 'Progresso por Categoria (R$)',
+                label: 'Gasto por Categoria (R$)',
                 data: valores,
                 backgroundColor: '#007bff'
             }]
-        },
-        options: { responsive: true }
+        }
     });
 }
 </script>
-
 </body>
 </html>
