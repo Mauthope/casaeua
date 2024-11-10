@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Levantador de Preços</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f7f7f7;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            background-color: #e0e0e0;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .dashboard {
+            margin-top: 20px;
+            text-align: center;
+        }
+        canvas {
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Levantador de Preços</h1>
+    <div class="container">
+        <!-- Formulário de entrada -->
+        <label for="custoConstrucao">Custo por m² para Construir:</label>
+        <input type="number" id="custoConstrucao" placeholder="R$">
+
+        <label for="custoTerreno">Custo do Terreno:</label>
+        <input type="number" id="custoTerreno" placeholder="R$">
+
+        <label for="custoDesenho">Custo com Desenho:</label>
+        <input type="number" id="custoDesenho" placeholder="R$">
+
+        <label for="custoMobiliario">Custo com Mobiliário:</label>
+        <input type="number" id="custoMobiliario" placeholder="R$">
+
+        <label for="custoPaisagismo">Custo com Paisagismo:</label>
+        <input type="number" id="custoPaisagismo" placeholder="R$">
+
+        <label for="custoCercado">Custo com Cercado:</label>
+        <input type="number" id="custoCercado" placeholder="R$">
+
+        <label for="cameras">Custo com Câmeras:</label>
+        <input type="number" id="cameras" placeholder="R$">
+
+        <label for="placaSolar">Custo com Placa Solar:</label>
+        <input type="number" id="placaSolar" placeholder="R$">
+
+        <label for="portaoEletronico">Custo com Portão Eletrônico:</label>
+        <input type="number" id="portaoEletronico" placeholder="R$">
+
+        <label for="divulgacao">Custo com Divulgação:</label>
+        <input type="number" id="divulgacao" placeholder="R$">
+
+        <label for="impostosConstrucao">Impostos de Construção (%):</label>
+        <input type="number" id="impostosConstrucao" placeholder="%">
+
+        <label for="impostosVenda">Impostos sobre Venda (%):</label>
+        <input type="number" id="impostosVenda" placeholder="%">
+
+        <label for="valorVenda">Valor de Venda:</label>
+        <input type="number" id="valorVenda" placeholder="R$">
+
+        <button class="btn" onclick="calcular()">Calcular</button>
+    </div>
+
+    <!-- Resultados -->
+    <div class="result" id="resultados" style="display: none;">
+        <p><strong>Custo Total da Obra:</strong> R$ <span id="custoTotal"></span></p>
+        <p><strong>Total em Impostos:</strong> R$ <span id="totalImpostos"></span></p>
+        <p><strong>Lucro Bruto:</strong> R$ <span id="lucroBruto"></span></p>
+        <p><strong>Lucro Líquido:</strong> R$ <span id="lucroLiquido"></span></p>
+        <div class="dashboard">
+            <canvas id="grafico"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function calcular() {
+            // Captura dos valores
+            const custoConstrucao = parseFloat(document.getElementById("custoConstrucao").value) || 0;
+            const custoTerreno = parseFloat(document.getElementById("custoTerreno").value) || 0;
+            const custoDesenho = parseFloat(document.getElementById("custoDesenho").value) || 0;
+            const custoMobiliario = parseFloat(document.getElementById("custoMobiliario").value) || 0;
+            const custoPaisagismo = parseFloat(document.getElementById("custoPaisagismo").value) || 0;
+            const custoCercado = parseFloat(document.getElementById("custoCercado").value) || 0;
+            const cameras = parseFloat(document.getElementById("cameras").value) || 0;
+            const placaSolar = parseFloat(document.getElementById("placaSolar").value) || 0;
+            const portaoEletronico = parseFloat(document.getElementById("portaoEletronico").value) || 0;
+            const divulgacao = parseFloat(document.getElementById("divulgacao").value) || 0;
+            const impostosConstrucao = parseFloat(document.getElementById("impostosConstrucao").value) || 0;
+            const impostosVenda = parseFloat(document.getElementById("impostosVenda").value) || 0;
+            const valorVenda = parseFloat(document.getElementById("valorVenda").value) || 0;
+
+            // Cálculos
+            const custoTotalObra = custoConstrucao + custoTerreno + custoDesenho + custoMobiliario + custoPaisagismo + custoCercado + cameras + placaSolar + portaoEletronico + divulgacao;
+            const totalImpostos = (impostosConstrucao / 100) * custoTotalObra + (impostosVenda / 100) * valorVenda;
+            const lucroBruto = valorVenda - custoTotalObra;
+            const lucroLiquido = lucroBruto - totalImpostos;
+
+            // Exibe os resultados
+            document.getElementById("custoTotal").textContent = custoTotalObra.toFixed(2);
+            document.getElementById("totalImpostos").textContent = totalImpostos.toFixed(2);
+            document.getElementById("lucroBruto").textContent = lucroBruto.toFixed(2);
+            document.getElementById("lucroLiquido").textContent = lucroLiquido.toFixed(2);
+            document.getElementById("resultados").style.display = "block";
+
+            // Dashboard com gráfico
+            const ctx = document.getElementById("grafico").getContext("2d");
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
+                    datasets: [{
+                        label: 'Lucro Líquido por Mês',
+                        data: Array(12).fill(lucroLiquido / 12),
+                        backgroundColor: '#007bff'
+                    }]
+                }
+            });
+        }
+    </script>
+</body>
+</html>
