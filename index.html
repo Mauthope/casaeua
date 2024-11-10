@@ -12,20 +12,14 @@
             padding: 20px;
             background-color: #f7f7f7;
         }
-        h1 {
-            text-align: center;
-        }
+        h1 { text-align: center; }
         .container {
             background-color: #fff;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        label {
-            font-weight: bold;
-            display: block;
-            margin-top: 10px;
-        }
+        label { font-weight: bold; margin-top: 10px; display: block; }
         input {
             width: 100%;
             padding: 10px;
@@ -33,148 +27,114 @@
             border: 1px solid #ccc;
             border-radius: 5px;
         }
-        .btn {
-            width: 100%;
-            padding: 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn:hover {
-            background-color: #0056b3;
-        }
-        .result {
+        .btn { width: 100%; padding: 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .btn:hover { background-color: #0056b3; }
+        .result, .export {
             margin-top: 20px;
             background-color: #e0e0e0;
             padding: 20px;
             border-radius: 10px;
         }
-        .dashboard {
-            margin-top: 20px;
-            text-align: center;
-        }
-        canvas {
-            max-width: 100%;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        table, th, td {
-            border: 1px solid #ddd;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background-color: #007bff;
-            color: white;
-        }
+        canvas { max-width: 100%; }
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #007bff; color: white; }
     </style>
 </head>
 <body>
     <h1>Levantador de Preços</h1>
     <div class="container">
-        <label for="custoConstrucao">Custo Total da Obra:</label>
+        <!-- Formulário de entrada -->
+        <label for="custoConstrucao">Custo por m² para Construir:</label>
         <input type="number" id="custoConstrucao" placeholder="R$">
+        
+        <label for="custoTerreno">Custo do Terreno:</label>
+        <input type="number" id="custoTerreno" placeholder="R$">
+
+        <label for="custoMaoObra">Custo com Mão de Obra:</label>
+        <input type="number" id="custoMaoObra" placeholder="R$">
+
+        <label for="custoDesenho">Custo com Desenho:</label>
+        <input type="number" id="custoDesenho" placeholder="R$">
+
+        <label for="custoMobiliario">Custo com Mobiliário:</label>
+        <input type="number" id="custoMobiliario" placeholder="R$">
+
+        <label for="custoPaisagismo">Custo com Paisagismo:</label>
+        <input type="number" id="custoPaisagismo" placeholder="R$">
+
+        <label for="divulgacao">Custo com Divulgação:</label>
+        <input type="number" id="divulgacao" placeholder="R$">
 
         <button class="btn" onclick="calcular()">Calcular</button>
     </div>
 
+    <!-- Resultados -->
     <div class="result" id="resultados" style="display: none;">
-        <p><strong>Valor de Venda Sugerido:</strong> R$ <span id="valorVenda"></span></p>
-        <p><strong>Impostos (Automáticos):</strong> R$ <span id="totalImpostos"></span></p>
-        <p><strong>Lucro Bruto:</strong> R$ <span id="lucroBruto"></span></p>
+        <p><strong>Custo Total:</strong> R$ <span id="custoTotal"></span></p>
+        <p><strong>Valor de Venda Sugerido:</strong> R$ <span id="valorVendaSugerido"></span></p>
         <p><strong>Lucro Líquido:</strong> R$ <span id="lucroLiquido"></span></p>
-        <div class="dashboard">
-            <canvas id="grafico"></canvas>
-        </div>
+        <canvas id="grafico"></canvas>
     </div>
 
-    <table id="tabela" style="display: none;">
-        <tr>
-            <th>Projeto</th>
-            <th>Valor de Venda</th>
-            <th>Lucro Líquido</th>
-        </tr>
-    </table>
+    <div class="export">
+        <button class="btn" onclick="exportar()">Exportar para Excel</button>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const projetos = JSON.parse(localStorage.getItem('projetos')) || [];
+        let projetos = JSON.parse(localStorage.getItem('projetos')) || [];
 
         function calcular() {
-            const custoTotalObra = parseFloat(document.getElementById("custoConstrucao").value) || 0;
+            const custoConstrucao = parseFloat(document.getElementById("custoConstrucao").value) || 0;
+            const custoTerreno = parseFloat(document.getElementById("custoTerreno").value) || 0;
+            const custoMaoObra = parseFloat(document.getElementById("custoMaoObra").value) || 0;
+            const custoDesenho = parseFloat(document.getElementById("custoDesenho").value) || 0;
+            const custoMobiliario = parseFloat(document.getElementById("custoMobiliario").value) || 0;
+            const custoPaisagismo = parseFloat(document.getElementById("custoPaisagismo").value) || 0;
+            const divulgacao = parseFloat(document.getElementById("divulgacao").value) || 0;
 
-            // Cálculo de valor de venda sugerido (100% de margem)
-            const valorVenda = custoTotalObra * 2;
+            const custoTotal = custoConstrucao + custoTerreno + custoMaoObra + custoDesenho + custoMobiliario + custoPaisagismo + divulgacao;
+            const valorVendaSugerido = custoTotal * 2; // Acresce 100%
+            const lucroLiquido = valorVendaSugerido - custoTotal;
 
-            // Cálculo de impostos automáticos
-            const impostoINSS = 0.045 * custoTotalObra;
-            const impostoISS = 0.04 * custoTotalObra;
-            const impostoITBI = 0.02 * valorVenda;
-            const impostoIRPJ = 0.1 * (valorVenda - custoTotalObra);
-            const totalImpostos = impostoINSS + impostoISS + impostoITBI + impostoIRPJ;
-
-            // Cálculo do lucro
-            const lucroBruto = valorVenda - custoTotalObra;
-            const lucroLiquido = lucroBruto - totalImpostos;
-
-            // Exibindo resultados
-            document.getElementById("valorVenda").textContent = valorVenda.toFixed(2);
-            document.getElementById("totalImpostos").textContent = totalImpostos.toFixed(2);
-            document.getElementById("lucroBruto").textContent = lucroBruto.toFixed(2);
+            document.getElementById("custoTotal").textContent = custoTotal.toFixed(2);
+            document.getElementById("valorVendaSugerido").textContent = valorVendaSugerido.toFixed(2);
             document.getElementById("lucroLiquido").textContent = lucroLiquido.toFixed(2);
             document.getElementById("resultados").style.display = "block";
 
-            // Salvar projeto no localStorage
-            const projeto = { valorVenda, lucroLiquido };
-            projetos.push(projeto);
+            projetos.push({ custoTotal, lucroLiquido });
             localStorage.setItem('projetos', JSON.stringify(projetos));
-            atualizarTabela();
             atualizarGrafico();
-        }
-
-        function atualizarTabela() {
-            const tabela = document.getElementById('tabela');
-            tabela.style.display = 'table';
-            tabela.innerHTML = '<tr><th>Projeto</th><th>Valor de Venda</th><th>Lucro Líquido</th></tr>';
-            projetos.forEach((proj, index) => {
-                tabela.innerHTML += `<tr><td>${index + 1}</td><td>R$ ${proj.valorVenda.toFixed(2)}</td><td>R$ ${proj.lucroLiquido.toFixed(2)}</td></tr>`;
-            });
         }
 
         function atualizarGrafico() {
             const ctx = document.getElementById("grafico").getContext("2d");
-            const lucroAcumulado = projetos.reduce((acc, proj) => acc + proj.lucroLiquido, 0);
+            const lucros = projetos.map(p => p.lucroLiquido);
             new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: projetos.map((_, index) => `Projeto ${index + 1}`),
+                    labels: Array.from({ length: lucros.length }, (_, i) => `Projeto ${i + 1}`),
                     datasets: [{
-                        label: 'Progresso do Lucro Líquido',
-                        data: projetos.map(p => p.lucroLiquido),
+                        label: 'Projeção de Lucro',
+                        data: lucros,
                         borderColor: '#007bff',
-                        fill: false
+                        fill: false,
                     }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 1000000
-                        }
-                    }
                 }
             });
         }
 
-        atualizarTabela();
-        atualizarGrafico();
+        function exportar() {
+            const csvContent = "data:text/csv;charset=utf-8," +
+                projetos.map(p => `${p.custoTotal},${p.lucroLiquido}`).join("\n");
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", "projetos.csv");
+            link.click();
+        }
+
+        window.onload = atualizarGrafico;
     </script>
 </body>
 </html>
