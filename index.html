@@ -13,18 +13,19 @@
             padding: 20px;
             background-color: #f7f7f7;
             border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         h2 { text-align: center; }
         label { display: block; margin-top: 10px; }
         input, select { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
-        button { margin-top: 20px; padding: 10px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button { margin-top: 20px; width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
         button:hover { background-color: #0056b3; }
-        .resultado { margin-top: 20px; background-color: #e9ecef; padding: 15px; }
-        .bloco { margin-top: 10px; padding: 10px; background-color: #fff; }
+        .resultado { margin-top: 20px; background-color: #e9ecef; padding: 15px; border-radius: 5px; }
+        .bloco { background-color: #fff; margin-top: 10px; padding: 10px; border-radius: 5px; border-left: 5px solid #007bff; }
         table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-        th, td { border: 1px solid #ccc; padding: 8px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
         th { background-color: #007bff; color: white; }
-        #chartContainer { max-width: 800px; margin: 40px auto; }
+        canvas { margin-top: 30px; }
     </style>
 </head>
 <body>
@@ -69,93 +70,107 @@
 
 <div class="resultado" id="resultado"></div>
 
-<div id="adicionarDetalhes" style="display: none;">
+<div id="detalhesCategorias" style="display: none;">
     <h3>Adicionar Detalhes para Categoria</h3>
-    <label>Selecione a Categoria:</label>
-    <select id="categoriaDetalhes"></select>
-    <label>Nome do Item:</label>
-    <input type="text" id="nomeItem">
-    <label>Valor do Item (R$):</label>
-    <input type="number" id="valorItem">
+    <label>Selecionar Categoria:</label>
+    <select id="categoriaDetalhe"></select>
+    
+    <label>Item:</label>
+    <input type="text" id="itemDetalhe">
+    
+    <label>Valor (R$):</label>
+    <input type="number" id="valorDetalhe">
+    
     <button type="button" onclick="adicionarDetalhe()">Adicionar Detalhe</button>
-    <table id="tabelaDetalhes"></table>
 </div>
 
-<div id="chartContainer">
-    <canvas id="chart"></canvas>
-</div>
+<table id="tabelaDetalhes">
+    <tr>
+        <th>Categoria</th>
+        <th>Item</th>
+        <th>Valor (R$)</th>
+    </tr>
+</table>
+
+<canvas id="graficoCategorias" width="400" height="200"></canvas>
 
 <script>
 let itens = [];
-let detalhesPorCategoria = {};
+let detalhes = {};
 
 function adicionarItem() {
     const categoria = document.getElementById("categoria").value;
     const valor = parseFloat(document.getElementById("valorCategoria").value);
-
     if (!isNaN(valor) && valor > 0) {
         itens.push({ categoria, valor });
         atualizarTabela();
+        preencherCategoriasDetalhe();
     }
 }
 
 function atualizarTabela() {
     const tabela = document.getElementById("tabelaItens");
-    tabela.innerHTML = '<tr><th>Categoria</th><th>Valor (R$)</th></tr>';
+    tabela.innerHTML = `<tr><th>Categoria</th><th>Valor (R$)</th></tr>`;
     itens.forEach(item => {
         tabela.innerHTML += `<tr><td>${item.categoria}</td><td>R$ ${item.valor.toFixed(2)}</td></tr>`;
-    });
-
-    atualizarOpcoesCategoria();
-}
-
-function atualizarOpcoesCategoria() {
-    const select = document.getElementById("categoriaDetalhes");
-    select.innerHTML = '';
-    [...new Set(itens.map(item => item.categoria))].forEach(categoria => {
-        select.innerHTML += `<option value="${categoria}">${categoria}</option>`;
     });
 }
 
 function calcular() {
-    document.getElementById("adicionarDetalhes").style.display = 'block';
+    document.getElementById("detalhesCategorias").style.display = "block";
     renderizarGrafico();
 }
 
+function preencherCategoriasDetalhe() {
+    const select = document.getElementById("categoriaDetalhe");
+    select.innerHTML = "";
+    itens.forEach(item => {
+        if (!detalhes[item.categoria]) detalhes[item.categoria] = [];
+        const option = document.createElement("option");
+        option.value = item.categoria;
+        option.textContent = item.categoria;
+        select.appendChild(option);
+    });
+}
+
 function adicionarDetalhe() {
-    const categoria = document.getElementById("categoriaDetalhes").value;
-    const nome = document.getElementById("nomeItem").value;
-    const valor = parseFloat(document.getElementById("valorItem").value);
-
-    if (!detalhesPorCategoria[categoria]) detalhesPorCategoria[categoria] = [];
-    detalhesPorCategoria[categoria].push({ nome, valor });
-
-    atualizarTabelaDetalhes(categoria);
-    renderizarGrafico();
+    const categoria = document.getElementById("categoriaDetalhe").value;
+    const item = document.getElementById("itemDetalhe").value;
+    const valor = parseFloat(document.getElementById("valorDetalhe").value);
+    
+    if (!isNaN(valor) && item) {
+        detalhes[categoria].push({ item, valor });
+        atualizarTabelaDetalhes(categoria);
+        renderizarGrafico();
+    }
 }
 
 function atualizarTabelaDetalhes(categoria) {
     const tabela = document.getElementById("tabelaDetalhes");
-    tabela.innerHTML = `<tr><th>Item</th><th>Valor (R$)</th></tr>`;
-    (detalhesPorCategoria[categoria] || []).forEach(item => {
-        tabela.innerHTML += `<tr><td>${item.nome}</td><td>R$ ${item.valor.toFixed(2)}</td></tr>`;
+    tabela.innerHTML = `<tr><th>Categoria</th><th>Item</th><th>Valor (R$)</th></tr>`;
+    Object.keys(detalhes).forEach(cat => {
+        detalhes[cat].forEach(detalhe => {
+            tabela.innerHTML += `<tr><td>${cat}</td><td>${detalhe.item}</td><td>R$ ${detalhe.valor.toFixed(2)}</td></tr>`;
+        });
     });
 }
 
 function renderizarGrafico() {
-    const ctx = document.getElementById("chart").getContext("2d");
-    const categorias = Object.keys(detalhesPorCategoria);
-    const valores = categorias.map(cat => detalhesPorCategoria[cat].reduce((acc, item) => acc + item.valor, 0));
-    const chart = new Chart(ctx, {
+    const ctx = document.getElementById("graficoCategorias").getContext("2d");
+    const categorias = Object.keys(detalhes);
+    const valores = categorias.map(cat => detalhes[cat].reduce((acc, item) => acc + item.valor, 0));
+
+    new Chart(ctx, {
         type: 'bar',
         data: {
             labels: categorias,
             datasets: [{
-                label: 'Progresso por Categoria',
+                label: 'Progresso por Categoria (R$)',
                 data: valores,
-                backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                backgroundColor: '#007bff'
             }]
-        }
+        },
+        options: { responsive: true }
     });
 }
 </script>
