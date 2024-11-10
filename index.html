@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Levantador de Preços</title>
+    <title>Levantador de Preços para Construção</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
             margin: 20px auto;
-            padding: 10px;
+            padding: 20px;
             background-color: #f7f7f7;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -46,6 +46,10 @@
             background-color: #e9ecef;
             padding: 15px;
             border-radius: 5px;
+        }
+        canvas {
+            margin-top: 20px;
+            width: 100%;
         }
     </style>
 </head>
@@ -87,14 +91,13 @@
     <label>Divulgação (R$):</label>
     <input type="number" id="divulgacao">
 
-    <label>Valor de Venda (R$):</label>
-    <input type="number" id="valorVenda" required>
-
     <button type="button" onclick="calcular()">Calcular</button>
 </form>
 
 <div class="resultado" id="resultado"></div>
+<canvas id="lucroGrafico"></canvas>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 function calcular() {
     // Captura dos valores
@@ -111,12 +114,12 @@ function calcular() {
         parseFloat(document.getElementById("portaoEletronico").value || 0),
         parseFloat(document.getElementById("divulgacao").value || 0)
     ];
-    const valorVenda = parseFloat(document.getElementById("valorVenda").value);
 
     // Cálculos dos custos e impostos
     const custoTotalObra = (custoPorMetro * metros) + custoTerreno + custosAdicionais.reduce((a, b) => a + b, 0);
-    const impostosConstrucao = custoTotalObra * 0.05; // Exemplo: 5% de impostos
-    const impostosVenda = valorVenda * 0.04; // Exemplo: 4% de impostos
+    const impostosConstrucao = custoTotalObra * 0.05; // 5% de impostos
+    const valorVenda = custoTotalObra * 2; // Margem de 100%
+    const impostosVenda = valorVenda * 0.04; // 4% de impostos
 
     const totalImpostos = impostosConstrucao + impostosVenda;
     const lucroBruto = valorVenda - custoTotalObra;
@@ -127,11 +130,33 @@ function calcular() {
     document.getElementById("resultado").innerHTML = `
         <h3>Resultados:</h3>
         <p><strong>Custo Total da Obra:</strong> R$ ${custoTotalObra.toFixed(2)}</p>
-        <p><strong>Total de Impostos:</strong> R$ ${totalImpostos.toFixed(2)}</p>
+        <p><strong>Impostos de Construção (5%):</strong> R$ ${impostosConstrucao.toFixed(2)}</p>
+        <p><strong>Impostos sobre Venda (4%):</strong> R$ ${impostosVenda.toFixed(2)}</p>
         <p><strong>Lucro Bruto:</strong> R$ ${lucroBruto.toFixed(2)}</p>
         <p><strong>Lucro Líquido:</strong> R$ ${lucroLiquido.toFixed(2)}</p>
         <p><strong>Lucro Mensal:</strong> R$ ${lucroMensal.toFixed(2)}</p>
     `;
+
+    // Gráfico de projeção de lucro
+    const ctx = document.getElementById('lucroGrafico').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: Array.from({ length: 12 }, (_, i) => `Mês ${i + 1}`),
+            datasets: [{
+                label: 'Lucro Líquido Mensal',
+                data: Array(12).fill(lucroMensal),
+                borderColor: 'blue',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                fill: true,
+            }]
+        },
+        options: {
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
 }
 </script>
 
