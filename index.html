@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f7f7f7;
@@ -23,8 +23,8 @@
         }
         label {
             font-weight: bold;
-            margin-top: 10px;
             display: block;
+            margin-top: 10px;
         }
         input {
             width: 100%;
@@ -58,58 +58,36 @@
         canvas {
             max-width: 100%;
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
     </style>
 </head>
 <body>
     <h1>Levantador de Preços</h1>
     <div class="container">
-        <!-- Formulário de entrada -->
-        <label for="custoConstrucao">Custo por m² para Construir:</label>
+        <label for="custoConstrucao">Custo Total da Obra:</label>
         <input type="number" id="custoConstrucao" placeholder="R$">
-
-        <label for="custoTerreno">Custo do Terreno:</label>
-        <input type="number" id="custoTerreno" placeholder="R$">
-
-        <label for="custoDesenho">Custo com Desenho:</label>
-        <input type="number" id="custoDesenho" placeholder="R$">
-
-        <label for="custoMobiliario">Custo com Mobiliário:</label>
-        <input type="number" id="custoMobiliario" placeholder="R$">
-
-        <label for="custoPaisagismo">Custo com Paisagismo:</label>
-        <input type="number" id="custoPaisagismo" placeholder="R$">
-
-        <label for="custoCercado">Custo com Cercado:</label>
-        <input type="number" id="custoCercado" placeholder="R$">
-
-        <label for="cameras">Custo com Câmeras:</label>
-        <input type="number" id="cameras" placeholder="R$">
-
-        <label for="placaSolar">Custo com Placa Solar:</label>
-        <input type="number" id="placaSolar" placeholder="R$">
-
-        <label for="portaoEletronico">Custo com Portão Eletrônico:</label>
-        <input type="number" id="portaoEletronico" placeholder="R$">
-
-        <label for="divulgacao">Custo com Divulgação:</label>
-        <input type="number" id="divulgacao" placeholder="R$">
-
-        <label for="impostosConstrucao">Impostos de Construção (%):</label>
-        <input type="number" id="impostosConstrucao" placeholder="%">
-
-        <label for="impostosVenda">Impostos sobre Venda (%):</label>
-        <input type="number" id="impostosVenda" placeholder="%">
-
-        <label for="valorVenda">Valor de Venda:</label>
-        <input type="number" id="valorVenda" placeholder="R$">
 
         <button class="btn" onclick="calcular()">Calcular</button>
     </div>
 
-    <!-- Resultados -->
     <div class="result" id="resultados" style="display: none;">
-        <p><strong>Custo Total da Obra:</strong> R$ <span id="custoTotal"></span></p>
-        <p><strong>Total em Impostos:</strong> R$ <span id="totalImpostos"></span></p>
+        <p><strong>Valor de Venda Sugerido:</strong> R$ <span id="valorVenda"></span></p>
+        <p><strong>Impostos (Automáticos):</strong> R$ <span id="totalImpostos"></span></p>
         <p><strong>Lucro Bruto:</strong> R$ <span id="lucroBruto"></span></p>
         <p><strong>Lucro Líquido:</strong> R$ <span id="lucroLiquido"></span></p>
         <div class="dashboard">
@@ -117,51 +95,86 @@
         </div>
     </div>
 
+    <table id="tabela" style="display: none;">
+        <tr>
+            <th>Projeto</th>
+            <th>Valor de Venda</th>
+            <th>Lucro Líquido</th>
+        </tr>
+    </table>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        function calcular() {
-            // Captura dos valores
-            const custoConstrucao = parseFloat(document.getElementById("custoConstrucao").value) || 0;
-            const custoTerreno = parseFloat(document.getElementById("custoTerreno").value) || 0;
-            const custoDesenho = parseFloat(document.getElementById("custoDesenho").value) || 0;
-            const custoMobiliario = parseFloat(document.getElementById("custoMobiliario").value) || 0;
-            const custoPaisagismo = parseFloat(document.getElementById("custoPaisagismo").value) || 0;
-            const custoCercado = parseFloat(document.getElementById("custoCercado").value) || 0;
-            const cameras = parseFloat(document.getElementById("cameras").value) || 0;
-            const placaSolar = parseFloat(document.getElementById("placaSolar").value) || 0;
-            const portaoEletronico = parseFloat(document.getElementById("portaoEletronico").value) || 0;
-            const divulgacao = parseFloat(document.getElementById("divulgacao").value) || 0;
-            const impostosConstrucao = parseFloat(document.getElementById("impostosConstrucao").value) || 0;
-            const impostosVenda = parseFloat(document.getElementById("impostosVenda").value) || 0;
-            const valorVenda = parseFloat(document.getElementById("valorVenda").value) || 0;
+        const projetos = JSON.parse(localStorage.getItem('projetos')) || [];
 
-            // Cálculos
-            const custoTotalObra = custoConstrucao + custoTerreno + custoDesenho + custoMobiliario + custoPaisagismo + custoCercado + cameras + placaSolar + portaoEletronico + divulgacao;
-            const totalImpostos = (impostosConstrucao / 100) * custoTotalObra + (impostosVenda / 100) * valorVenda;
+        function calcular() {
+            const custoTotalObra = parseFloat(document.getElementById("custoConstrucao").value) || 0;
+
+            // Cálculo de valor de venda sugerido (100% de margem)
+            const valorVenda = custoTotalObra * 2;
+
+            // Cálculo de impostos automáticos
+            const impostoINSS = 0.045 * custoTotalObra;
+            const impostoISS = 0.04 * custoTotalObra;
+            const impostoITBI = 0.02 * valorVenda;
+            const impostoIRPJ = 0.1 * (valorVenda - custoTotalObra);
+            const totalImpostos = impostoINSS + impostoISS + impostoITBI + impostoIRPJ;
+
+            // Cálculo do lucro
             const lucroBruto = valorVenda - custoTotalObra;
             const lucroLiquido = lucroBruto - totalImpostos;
 
-            // Exibe os resultados
-            document.getElementById("custoTotal").textContent = custoTotalObra.toFixed(2);
+            // Exibindo resultados
+            document.getElementById("valorVenda").textContent = valorVenda.toFixed(2);
             document.getElementById("totalImpostos").textContent = totalImpostos.toFixed(2);
             document.getElementById("lucroBruto").textContent = lucroBruto.toFixed(2);
             document.getElementById("lucroLiquido").textContent = lucroLiquido.toFixed(2);
             document.getElementById("resultados").style.display = "block";
 
-            // Dashboard com gráfico
+            // Salvar projeto no localStorage
+            const projeto = { valorVenda, lucroLiquido };
+            projetos.push(projeto);
+            localStorage.setItem('projetos', JSON.stringify(projetos));
+            atualizarTabela();
+            atualizarGrafico();
+        }
+
+        function atualizarTabela() {
+            const tabela = document.getElementById('tabela');
+            tabela.style.display = 'table';
+            tabela.innerHTML = '<tr><th>Projeto</th><th>Valor de Venda</th><th>Lucro Líquido</th></tr>';
+            projetos.forEach((proj, index) => {
+                tabela.innerHTML += `<tr><td>${index + 1}</td><td>R$ ${proj.valorVenda.toFixed(2)}</td><td>R$ ${proj.lucroLiquido.toFixed(2)}</td></tr>`;
+            });
+        }
+
+        function atualizarGrafico() {
             const ctx = document.getElementById("grafico").getContext("2d");
+            const lucroAcumulado = projetos.reduce((acc, proj) => acc + proj.lucroLiquido, 0);
             new Chart(ctx, {
-                type: 'bar',
+                type: 'line',
                 data: {
-                    labels: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
+                    labels: projetos.map((_, index) => `Projeto ${index + 1}`),
                     datasets: [{
-                        label: 'Lucro Líquido por Mês',
-                        data: Array(12).fill(lucroLiquido / 12),
-                        backgroundColor: '#007bff'
+                        label: 'Progresso do Lucro Líquido',
+                        data: projetos.map(p => p.lucroLiquido),
+                        borderColor: '#007bff',
+                        fill: false
                     }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1000000
+                        }
+                    }
                 }
             });
         }
+
+        atualizarTabela();
+        atualizarGrafico();
     </script>
 </body>
 </html>
