@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Levantador de Preços para Construção</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,18 +13,18 @@
             padding: 20px;
             background-color: #f7f7f7;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         h2 { text-align: center; }
         label { display: block; margin-top: 10px; }
-        input { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
-        button { margin-top: 20px; width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        input, select { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
+        button { margin-top: 20px; padding: 10px; background-color: #007bff; color: white; border: none; cursor: pointer; }
         button:hover { background-color: #0056b3; }
-        .resultado { margin-top: 20px; background-color: #e9ecef; padding: 15px; border-radius: 5px; }
-        .bloco { background-color: #fff; margin-top: 10px; padding: 10px; border-radius: 5px; border-left: 5px solid #007bff; }
+        .resultado { margin-top: 20px; background-color: #e9ecef; padding: 15px; }
+        .bloco { margin-top: 10px; padding: 10px; background-color: #fff; }
         table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th, td { border: 1px solid #ccc; padding: 8px; }
         th { background-color: #007bff; color: white; }
+        #chartContainer { max-width: 800px; margin: 40px auto; }
     </style>
 </head>
 <body>
@@ -68,8 +69,25 @@
 
 <div class="resultado" id="resultado"></div>
 
+<div id="adicionarDetalhes" style="display: none;">
+    <h3>Adicionar Detalhes para Categoria</h3>
+    <label>Selecione a Categoria:</label>
+    <select id="categoriaDetalhes"></select>
+    <label>Nome do Item:</label>
+    <input type="text" id="nomeItem">
+    <label>Valor do Item (R$):</label>
+    <input type="number" id="valorItem">
+    <button type="button" onclick="adicionarDetalhe()">Adicionar Detalhe</button>
+    <table id="tabelaDetalhes"></table>
+</div>
+
+<div id="chartContainer">
+    <canvas id="chart"></canvas>
+</div>
+
 <script>
 let itens = [];
+let detalhesPorCategoria = {};
 
 function adicionarItem() {
     const categoria = document.getElementById("categoria").value;
@@ -83,56 +101,62 @@ function adicionarItem() {
 
 function atualizarTabela() {
     const tabela = document.getElementById("tabelaItens");
-    tabela.innerHTML = `
-        <tr>
-            <th>Categoria</th>
-            <th>Valor (R$)</th>
-        </tr>
-    `;
-
+    tabela.innerHTML = '<tr><th>Categoria</th><th>Valor (R$)</th></tr>';
     itens.forEach(item => {
-        tabela.innerHTML += `
-            <tr>
-                <td>${item.categoria}</td>
-                <td>R$ ${item.valor.toFixed(2)}</td>
-            </tr>
-        `;
+        tabela.innerHTML += `<tr><td>${item.categoria}</td><td>R$ ${item.valor.toFixed(2)}</td></tr>`;
+    });
+
+    atualizarOpcoesCategoria();
+}
+
+function atualizarOpcoesCategoria() {
+    const select = document.getElementById("categoriaDetalhes");
+    select.innerHTML = '';
+    [...new Set(itens.map(item => item.categoria))].forEach(categoria => {
+        select.innerHTML += `<option value="${categoria}">${categoria}</option>`;
     });
 }
 
 function calcular() {
-    const custoPorMetro = parseFloat(document.getElementById("custoPorMetroQuadrado").value);
-    const metros = parseFloat(document.getElementById("metrosQuadrados").value);
-    const custoTerreno = parseFloat(document.getElementById("custoTerreno").value);
+    document.getElementById("adicionarDetalhes").style.display = 'block';
+    renderizarGrafico();
+}
 
-    const custoConstruir = custoPorMetro * metros;
-    const custosAdicionaisTotal = itens.reduce((acc, item) => acc + item.valor, 0);
-    const custoTotalObra = custoConstruir + custoTerreno + custosAdicionaisTotal;
+function adicionarDetalhe() {
+    const categoria = document.getElementById("categoriaDetalhes").value;
+    const nome = document.getElementById("nomeItem").value;
+    const valor = parseFloat(document.getElementById("valorItem").value);
 
-    // Cálculo dos impostos
-    const impostosConstrucao = custoTotalObra * 0.053;
-    const valorVenda = custoTotalObra * 2; // Custo acrescido de 100%
-    const impostosVenda = valorVenda * 0.0673;
-    const totalImpostos = impostosConstrucao + impostosVenda;
+    if (!detalhesPorCategoria[categoria]) detalhesPorCategoria[categoria] = [];
+    detalhesPorCategoria[categoria].push({ nome, valor });
 
-    // Cálculo do lucro bruto e líquido
-    const lucroBruto = valorVenda - custoTotalObra;
-    const lucroLiquido = lucroBruto - totalImpostos;
-    const lucroMensal = lucroLiquido / 12;
+    atualizarTabelaDetalhes(categoria);
+    renderizarGrafico();
+}
 
-    // Exibir os resultados
-    document.getElementById("resultado").innerHTML = `
-        <div class="bloco"><strong>Custo de Construção:</strong> R$ ${custoConstruir.toFixed(2)}</div>
-        <div class="bloco"><strong>Custo do Terreno:</strong> R$ ${custoTerreno.toFixed(2)}</div>
-        <div class="bloco"><strong>Custos Adicionais:</strong> R$ ${custosAdicionaisTotal.toFixed(2)}</div>
-        <div class="bloco"><strong>Custo Total da Obra:</strong> R$ ${custoTotalObra.toFixed(2)}</div>
-        <div class="bloco"><strong>Preço de Venda:</strong> R$ ${valorVenda.toFixed(2)}</div>
-        <div class="bloco"><strong>Impostos Construção:</strong> R$ ${impostosConstrucao.toFixed(2)}</div>
-        <div class="bloco"><strong>Impostos Venda:</strong> R$ ${impostosVenda.toFixed(2)}</div>
-        <div class="bloco"><strong>Lucro Bruto:</strong> R$ ${lucroBruto.toFixed(2)}</div>
-        <div class="bloco"><strong>Lucro Líquido:</strong> R$ ${lucroLiquido.toFixed(2)}</div>
-        <div class="bloco"><strong>Lucro Mensal:</strong> R$ ${lucroMensal.toFixed(2)}</div>
-    `;
+function atualizarTabelaDetalhes(categoria) {
+    const tabela = document.getElementById("tabelaDetalhes");
+    tabela.innerHTML = `<tr><th>Item</th><th>Valor (R$)</th></tr>`;
+    (detalhesPorCategoria[categoria] || []).forEach(item => {
+        tabela.innerHTML += `<tr><td>${item.nome}</td><td>R$ ${item.valor.toFixed(2)}</td></tr>`;
+    });
+}
+
+function renderizarGrafico() {
+    const ctx = document.getElementById("chart").getContext("2d");
+    const categorias = Object.keys(detalhesPorCategoria);
+    const valores = categorias.map(cat => detalhesPorCategoria[cat].reduce((acc, item) => acc + item.valor, 0));
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: categorias,
+            datasets: [{
+                label: 'Progresso por Categoria',
+                data: valores,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)'
+            }]
+        }
+    });
 }
 </script>
 
