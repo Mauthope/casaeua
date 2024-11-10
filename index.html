@@ -14,46 +14,16 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        h2 {
-            text-align: center;
-        }
-        label {
-            display: block;
-            margin-top: 10px;
-        }
-        input {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-        button {
-            margin-top: 20px;
-            width: 100%;
-            padding: 10px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .resultado {
-            margin-top: 20px;
-            background-color: #e9ecef;
-            padding: 15px;
-            border-radius: 5px;
-        }
-        .bloco {
-            background-color: #fff;
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 5px;
-            border-left: 5px solid #007bff;
-        }
+        h2 { text-align: center; }
+        label { display: block; margin-top: 10px; }
+        input { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
+        button { margin-top: 20px; width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .resultado { margin-top: 20px; background-color: #e9ecef; padding: 15px; border-radius: 5px; }
+        .bloco { background-color: #fff; margin-top: 10px; padding: 10px; border-radius: 5px; border-left: 5px solid #007bff; }
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #007bff; color: white; }
     </style>
 </head>
 <body>
@@ -63,67 +33,86 @@
 <form id="formulario">
     <label>Custo por Metro Quadrado (R$):</label>
     <input type="number" id="custoPorMetroQuadrado" required>
-
+    
     <label>Metros Quadrados:</label>
     <input type="number" id="metrosQuadrados" required>
-
+    
     <label>Custo do Terreno (R$):</label>
     <input type="number" id="custoTerreno" required>
-
-    <label>Custo com Desenho (R$):</label>
-    <input type="number" id="custoDesenho">
-
-    <label>Custo com Mobiliário (R$):</label>
-    <input type="number" id="custoMobiliario">
-
-    <label>Paisagismo (R$):</label>
-    <input type="number" id="paisagismo">
-
-    <label>Cercado (R$):</label>
-    <input type="number" id="cercado">
-
-    <label>Câmeras (R$):</label>
-    <input type="number" id="cameras">
-
-    <label>Placa Solar (R$):</label>
-    <input type="number" id="placaSolar">
-
-    <label>Portão Eletrônico (R$):</label>
-    <input type="number" id="portaoEletronico">
-
-    <label>Divulgação (R$):</label>
-    <input type="number" id="divulgacao">
-
-    <button type="button" onclick="calcular()">Calcular</button>
+    
+    <label>Categoria:</label>
+    <select id="categoria">
+        <option value="Desenho">Desenho</option>
+        <option value="Mobiliário">Mobiliário</option>
+        <option value="Paisagismo">Paisagismo</option>
+        <option value="Cercado">Cercado</option>
+        <option value="Câmeras">Câmeras</option>
+        <option value="Placa Solar">Placa Solar</option>
+        <option value="Portão Eletrônico">Portão Eletrônico</option>
+        <option value="Divulgação">Divulgação</option>
+    </select>
+    
+    <label>Valor (R$):</label>
+    <input type="number" id="valorCategoria">
+    
+    <button type="button" onclick="adicionarItem()">Adicionar Item</button>
+    <button type="button" onclick="calcular()">Calcular Total</button>
 </form>
+
+<table id="tabelaItens">
+    <tr>
+        <th>Categoria</th>
+        <th>Valor (R$)</th>
+    </tr>
+</table>
 
 <div class="resultado" id="resultado"></div>
 
 <script>
+let itens = [];
+
+function adicionarItem() {
+    const categoria = document.getElementById("categoria").value;
+    const valor = parseFloat(document.getElementById("valorCategoria").value);
+
+    if (!isNaN(valor) && valor > 0) {
+        itens.push({ categoria, valor });
+        atualizarTabela();
+    }
+}
+
+function atualizarTabela() {
+    const tabela = document.getElementById("tabelaItens");
+    tabela.innerHTML = `
+        <tr>
+            <th>Categoria</th>
+            <th>Valor (R$)</th>
+        </tr>
+    `;
+
+    itens.forEach(item => {
+        tabela.innerHTML += `
+            <tr>
+                <td>${item.categoria}</td>
+                <td>R$ ${item.valor.toFixed(2)}</td>
+            </tr>
+        `;
+    });
+}
+
 function calcular() {
     const custoPorMetro = parseFloat(document.getElementById("custoPorMetroQuadrado").value);
     const metros = parseFloat(document.getElementById("metrosQuadrados").value);
     const custoTerreno = parseFloat(document.getElementById("custoTerreno").value);
-    const custosAdicionais = [
-        parseFloat(document.getElementById("custoDesenho").value || 0),
-        parseFloat(document.getElementById("custoMobiliario").value || 0),
-        parseFloat(document.getElementById("paisagismo").value || 0),
-        parseFloat(document.getElementById("cercado").value || 0),
-        parseFloat(document.getElementById("cameras").value || 0),
-        parseFloat(document.getElementById("placaSolar").value || 0),
-        parseFloat(document.getElementById("portaoEletronico").value || 0),
-        parseFloat(document.getElementById("divulgacao").value || 0)
-    ];
 
-    // Cálculo dos custos
     const custoConstruir = custoPorMetro * metros;
-    const custosAdicionaisTotal = custosAdicionais.reduce((a, b) => a + b, 0);
+    const custosAdicionaisTotal = itens.reduce((acc, item) => acc + item.valor, 0);
     const custoTotalObra = custoConstruir + custoTerreno + custosAdicionaisTotal;
 
     // Cálculo dos impostos
-    const impostosConstrucao = custoTotalObra * 0.053; // INSS + ISS (5.3%)
-    const valorVenda = custoTotalObra * 2; // Preço de venda é o custo total acrescido de 100%
-    const impostosVenda = valorVenda * 0.0673; // ITBI + IRPJ + CSLL (6.73%)
+    const impostosConstrucao = custoTotalObra * 0.053;
+    const valorVenda = custoTotalObra * 2; // Custo acrescido de 100%
+    const impostosVenda = valorVenda * 0.0673;
     const totalImpostos = impostosConstrucao + impostosVenda;
 
     // Cálculo do lucro bruto e líquido
@@ -131,30 +120,17 @@ function calcular() {
     const lucroLiquido = lucroBruto - totalImpostos;
     const lucroMensal = lucroLiquido / 12;
 
-    // Exibindo os resultados com explicações
+    // Exibir os resultados
     document.getElementById("resultado").innerHTML = `
-        <div class="bloco"><strong>Custo de Construção:</strong> R$ ${custoConstruir.toFixed(2)}<br>
-        (Calculado como: Custo por Metro Quadrado x Metros Quadrados)</div>
-        
+        <div class="bloco"><strong>Custo de Construção:</strong> R$ ${custoConstruir.toFixed(2)}</div>
         <div class="bloco"><strong>Custo do Terreno:</strong> R$ ${custoTerreno.toFixed(2)}</div>
-        
         <div class="bloco"><strong>Custos Adicionais:</strong> R$ ${custosAdicionaisTotal.toFixed(2)}</div>
-        
-        <div class="bloco"><strong>Custo Total da Obra:</strong> R$ ${custoTotalObra.toFixed(2)}<br>
-        (Soma de todos os custos acima)</div>
-        
-        <div class="bloco"><strong>Preço de Venda:</strong> R$ ${valorVenda.toFixed(2)}<br>
-        (Custo Total da Obra acrescido de 100%)</div>
-        
-        <div class="bloco"><strong>Impostos de Construção:</strong> R$ ${impostosConstrucao.toFixed(2)}</div>
-        
-        <div class="bloco"><strong>Impostos sobre Venda:</strong> R$ ${impostosVenda.toFixed(2)}</div>
-        
+        <div class="bloco"><strong>Custo Total da Obra:</strong> R$ ${custoTotalObra.toFixed(2)}</div>
+        <div class="bloco"><strong>Preço de Venda:</strong> R$ ${valorVenda.toFixed(2)}</div>
+        <div class="bloco"><strong>Impostos Construção:</strong> R$ ${impostosConstrucao.toFixed(2)}</div>
+        <div class="bloco"><strong>Impostos Venda:</strong> R$ ${impostosVenda.toFixed(2)}</div>
         <div class="bloco"><strong>Lucro Bruto:</strong> R$ ${lucroBruto.toFixed(2)}</div>
-        
-        <div class="bloco"><strong>Lucro Líquido:</strong> R$ ${lucroLiquido.toFixed(2)}<br>
-        (Valor de venda menos todos os custos e impostos)</div>
-        
+        <div class="bloco"><strong>Lucro Líquido:</strong> R$ ${lucroLiquido.toFixed(2)}</div>
         <div class="bloco"><strong>Lucro Mensal:</strong> R$ ${lucroMensal.toFixed(2)}</div>
     `;
 }
