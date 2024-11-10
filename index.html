@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,134 +7,133 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 20px;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 10px;
             background-color: #f7f7f7;
-        }
-        h1 { text-align: center; }
-        .container {
-            background-color: #fff;
-            padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        label { font-weight: bold; margin-top: 10px; display: block; }
+        h2 {
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
         input {
             width: 100%;
-            padding: 10px;
-            margin: 5px 0 15px;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 5px;
             border: 1px solid #ccc;
+        }
+        button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .resultado {
+            margin-top: 20px;
+            background-color: #e9ecef;
+            padding: 15px;
             border-radius: 5px;
         }
-        .btn { width: 100%; padding: 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        .btn:hover { background-color: #0056b3; }
-        .result, .export {
-            margin-top: 20px;
-            background-color: #e0e0e0;
-            padding: 20px;
-            border-radius: 10px;
-        }
-        canvas { max-width: 100%; }
-        table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        th { background-color: #007bff; color: white; }
     </style>
 </head>
 <body>
-    <h1>Levantador de Preços</h1>
-    <div class="container">
-        <!-- Formulário de entrada -->
-        <label for="custoConstrucao">Custo por m² para Construir:</label>
-        <input type="number" id="custoConstrucao" placeholder="R$">
-        
-        <label for="custoTerreno">Custo do Terreno:</label>
-        <input type="number" id="custoTerreno" placeholder="R$">
 
-        <label for="custoMaoObra">Custo com Mão de Obra:</label>
-        <input type="number" id="custoMaoObra" placeholder="R$">
+<h2>Levantador de Preços para Construção</h2>
 
-        <label for="custoDesenho">Custo com Desenho:</label>
-        <input type="number" id="custoDesenho" placeholder="R$">
+<form id="formulario">
+    <label>Custo por Metro Quadrado (R$):</label>
+    <input type="number" id="custoPorMetroQuadrado" required>
 
-        <label for="custoMobiliario">Custo com Mobiliário:</label>
-        <input type="number" id="custoMobiliario" placeholder="R$">
+    <label>Metros Quadrados:</label>
+    <input type="number" id="metrosQuadrados" required>
 
-        <label for="custoPaisagismo">Custo com Paisagismo:</label>
-        <input type="number" id="custoPaisagismo" placeholder="R$">
+    <label>Custo do Terreno (R$):</label>
+    <input type="number" id="custoTerreno" required>
 
-        <label for="divulgacao">Custo com Divulgação:</label>
-        <input type="number" id="divulgacao" placeholder="R$">
+    <label>Custo com Desenho (R$):</label>
+    <input type="number" id="custoDesenho">
 
-        <button class="btn" onclick="calcular()">Calcular</button>
-    </div>
+    <label>Custo com Mobiliário (R$):</label>
+    <input type="number" id="custoMobiliario">
 
-    <!-- Resultados -->
-    <div class="result" id="resultados" style="display: none;">
-        <p><strong>Custo Total:</strong> R$ <span id="custoTotal"></span></p>
-        <p><strong>Valor de Venda Sugerido:</strong> R$ <span id="valorVendaSugerido"></span></p>
-        <p><strong>Lucro Líquido:</strong> R$ <span id="lucroLiquido"></span></p>
-        <canvas id="grafico"></canvas>
-    </div>
+    <label>Paisagismo (R$):</label>
+    <input type="number" id="paisagismo">
 
-    <div class="export">
-        <button class="btn" onclick="exportar()">Exportar para Excel</button>
-    </div>
+    <label>Cercado (R$):</label>
+    <input type="number" id="cercado">
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        let projetos = JSON.parse(localStorage.getItem('projetos')) || [];
+    <label>Câmeras (R$):</label>
+    <input type="number" id="cameras">
 
-        function calcular() {
-            const custoConstrucao = parseFloat(document.getElementById("custoConstrucao").value) || 0;
-            const custoTerreno = parseFloat(document.getElementById("custoTerreno").value) || 0;
-            const custoMaoObra = parseFloat(document.getElementById("custoMaoObra").value) || 0;
-            const custoDesenho = parseFloat(document.getElementById("custoDesenho").value) || 0;
-            const custoMobiliario = parseFloat(document.getElementById("custoMobiliario").value) || 0;
-            const custoPaisagismo = parseFloat(document.getElementById("custoPaisagismo").value) || 0;
-            const divulgacao = parseFloat(document.getElementById("divulgacao").value) || 0;
+    <label>Placa Solar (R$):</label>
+    <input type="number" id="placaSolar">
 
-            const custoTotal = custoConstrucao + custoTerreno + custoMaoObra + custoDesenho + custoMobiliario + custoPaisagismo + divulgacao;
-            const valorVendaSugerido = custoTotal * 2; // Acresce 100%
-            const lucroLiquido = valorVendaSugerido - custoTotal;
+    <label>Portão Eletrônico (R$):</label>
+    <input type="number" id="portaoEletronico">
 
-            document.getElementById("custoTotal").textContent = custoTotal.toFixed(2);
-            document.getElementById("valorVendaSugerido").textContent = valorVendaSugerido.toFixed(2);
-            document.getElementById("lucroLiquido").textContent = lucroLiquido.toFixed(2);
-            document.getElementById("resultados").style.display = "block";
+    <label>Divulgação (R$):</label>
+    <input type="number" id="divulgacao">
 
-            projetos.push({ custoTotal, lucroLiquido });
-            localStorage.setItem('projetos', JSON.stringify(projetos));
-            atualizarGrafico();
-        }
+    <label>Valor de Venda (R$):</label>
+    <input type="number" id="valorVenda" required>
 
-        function atualizarGrafico() {
-            const ctx = document.getElementById("grafico").getContext("2d");
-            const lucros = projetos.map(p => p.lucroLiquido);
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: Array.from({ length: lucros.length }, (_, i) => `Projeto ${i + 1}`),
-                    datasets: [{
-                        label: 'Projeção de Lucro',
-                        data: lucros,
-                        borderColor: '#007bff',
-                        fill: false,
-                    }]
-                }
-            });
-        }
+    <button type="button" onclick="calcular()">Calcular</button>
+</form>
 
-        function exportar() {
-            const csvContent = "data:text/csv;charset=utf-8," +
-                projetos.map(p => `${p.custoTotal},${p.lucroLiquido}`).join("\n");
-            const link = document.createElement("a");
-            link.setAttribute("href", encodeURI(csvContent));
-            link.setAttribute("download", "projetos.csv");
-            link.click();
-        }
+<div class="resultado" id="resultado"></div>
 
-        window.onload = atualizarGrafico;
-    </script>
+<script>
+function calcular() {
+    // Captura dos valores
+    const custoPorMetro = parseFloat(document.getElementById("custoPorMetroQuadrado").value);
+    const metros = parseFloat(document.getElementById("metrosQuadrados").value);
+    const custoTerreno = parseFloat(document.getElementById("custoTerreno").value);
+    const custosAdicionais = [
+        parseFloat(document.getElementById("custoDesenho").value || 0),
+        parseFloat(document.getElementById("custoMobiliario").value || 0),
+        parseFloat(document.getElementById("paisagismo").value || 0),
+        parseFloat(document.getElementById("cercado").value || 0),
+        parseFloat(document.getElementById("cameras").value || 0),
+        parseFloat(document.getElementById("placaSolar").value || 0),
+        parseFloat(document.getElementById("portaoEletronico").value || 0),
+        parseFloat(document.getElementById("divulgacao").value || 0)
+    ];
+    const valorVenda = parseFloat(document.getElementById("valorVenda").value);
+
+    // Cálculos dos custos e impostos
+    const custoTotalObra = (custoPorMetro * metros) + custoTerreno + custosAdicionais.reduce((a, b) => a + b, 0);
+    const impostosConstrucao = custoTotalObra * 0.05; // Exemplo: 5% de impostos
+    const impostosVenda = valorVenda * 0.04; // Exemplo: 4% de impostos
+
+    const totalImpostos = impostosConstrucao + impostosVenda;
+    const lucroBruto = valorVenda - custoTotalObra;
+    const lucroLiquido = lucroBruto - totalImpostos;
+    const lucroMensal = lucroLiquido / 12;
+
+    // Exibição dos resultados
+    document.getElementById("resultado").innerHTML = `
+        <h3>Resultados:</h3>
+        <p><strong>Custo Total da Obra:</strong> R$ ${custoTotalObra.toFixed(2)}</p>
+        <p><strong>Total de Impostos:</strong> R$ ${totalImpostos.toFixed(2)}</p>
+        <p><strong>Lucro Bruto:</strong> R$ ${lucroBruto.toFixed(2)}</p>
+        <p><strong>Lucro Líquido:</strong> R$ ${lucroLiquido.toFixed(2)}</p>
+        <p><strong>Lucro Mensal:</strong> R$ ${lucroMensal.toFixed(2)}</p>
+    `;
+}
+</script>
+
 </body>
 </html>
