@@ -4,23 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Levantador de Preços para Construção</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; }
-        label { display: block; margin-top: 10px; }
-        input, select { width: 100%; padding: 8px; margin-top: 5px; }
-        button { margin-top: 20px; width: 100%; padding: 10px; background-color: #007bff; color: white; cursor: pointer; }
-        .resultado, #detalhesCategorias, #tabelaDetalhes { margin-top: 20px; }
-        table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        canvas { margin-top: 30px; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f7f7f7;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .resultado {
+            margin-top: 20px;
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .bloco {
+            background-color: #fff;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 5px solid #007bff;
+        }
     </style>
 </head>
 <body>
 
 <h2>Levantador de Preços para Construção</h2>
 
-<!-- ETAPA 1: Inserir Dados para Cálculos -->
 <form id="formulario">
     <label>Custo por Metro Quadrado (R$):</label>
     <input type="number" id="custoPorMetroQuadrado" required>
@@ -31,106 +70,95 @@
     <label>Custo do Terreno (R$):</label>
     <input type="number" id="custoTerreno" required>
 
-    <label>Custo com Mobiliário (R$):</label>
-    <input type="number" id="custoMobilario" required>
-
-    <label>Custo com Paisagismo (R$):</label>
-    <input type="number" id="custoPaisagismo" required>
-
     <label>Custo com Desenho (R$):</label>
-    <input type="number" id="custoDesenho" required>
+    <input type="number" id="custoDesenho">
+
+    <label>Custo com Mobiliário (R$):</label>
+    <input type="number" id="custoMobiliario">
+
+    <label>Paisagismo (R$):</label>
+    <input type="number" id="paisagismo">
 
     <label>Cercado (R$):</label>
-    <input type="number" id="cercado" required>
+    <input type="number" id="cercado">
 
     <label>Câmeras (R$):</label>
-    <input type="number" id="cameras" required>
+    <input type="number" id="cameras">
 
     <label>Placa Solar (R$):</label>
-    <input type="number" id="placaSolar" required>
+    <input type="number" id="placaSolar">
 
     <label>Portão Eletrônico (R$):</label>
-    <input type="number" id="portaoEletronico" required>
+    <input type="number" id="portaoEletronico">
 
     <label>Divulgação (R$):</label>
-    <input type="number" id="divulgacao" required>
+    <input type="number" id="divulgacao">
 
-    <label>Impostos de Construção (%):</label>
-    <input type="number" id="impostosConstrucao" value="5" required>
-
-    <label>Impostos sobre Venda (%):</label>
-    <input type="number" id="impostosVenda" value="10" required>
-
-    <button type="button" onclick="calcular()">Calcular Total</button>
+    <button type="button" onclick="calcular()">Calcular</button>
 </form>
 
-<!-- ETAPA 2: Exibir Resultados -->
 <div class="resultado" id="resultado"></div>
 
-<!-- ETAPA 3: Adicionar Detalhes para Categoria -->
-<div id="detalhesCategorias" style="display: none;">
-    <h3>Adicionar Detalhes por Categoria</h3>
-    <label>Categoria:</label>
-    <select id="categoriaDetalhe">
-        <option value="Mobiliário">Mobiliário</option>
-        <option value="Paisagismo">Paisagismo</option>
-        <option value="Cercado">Cercado</option>
-        <option value="Câmeras">Câmeras</option>
-        <option value="Placa Solar">Placa Solar</option>
-        <option value="Portão Eletrônico">Portão Eletrônico</option>
-    </select>
-
-    <label>Item:</label>
-    <input type="text" id="itemDetalhe">
-    
-    <label>Valor (R$):</label>
-    <input type="number" id="valorDetalhe">
-
-    <button type="button" onclick="adicionarDetalhe()">Adicionar Item</button>
-</div>
-
-<!-- Tabela para exibir itens detalhados -->
-<table id="tabelaDetalhes">
-    <tr><th>Categoria</th><th>Item</th><th>Valor (R$)</th></tr>
-</table>
-
-<!-- ETAPA 4: Gráfico de Gastos por Categoria -->
-<canvas id="graficoCategorias" width="400" height="200"></canvas>
-
 <script>
-let detalhes = {};
-let totalCusto = 0;
-
-// Função para calcular os custos iniciais
 function calcular() {
-    const custoPorMetroQuadrado = parseFloat(document.getElementById("custoPorMetroQuadrado").value);
-    const metrosQuadrados = parseFloat(document.getElementById("metrosQuadrados").value);
+    const custoPorMetro = parseFloat(document.getElementById("custoPorMetroQuadrado").value);
+    const metros = parseFloat(document.getElementById("metrosQuadrados").value);
     const custoTerreno = parseFloat(document.getElementById("custoTerreno").value);
-    const custoMobilario = parseFloat(document.getElementById("custoMobilario").value);
-    const custoPaisagismo = parseFloat(document.getElementById("custoPaisagismo").value);
-    const custoDesenho = parseFloat(document.getElementById("custoDesenho").value);
-    const cercado = parseFloat(document.getElementById("cercado").value);
-    const cameras = parseFloat(document.getElementById("cameras").value);
-    const placaSolar = parseFloat(document.getElementById("placaSolar").value);
-    const portaoEletronico = parseFloat(document.getElementById("portaoEletronico").value);
-    const divulgacao = parseFloat(document.getElementById("divulgacao").value);
+    const custosAdicionais = [
+        parseFloat(document.getElementById("custoDesenho").value || 0),
+        parseFloat(document.getElementById("custoMobiliario").value || 0),
+        parseFloat(document.getElementById("paisagismo").value || 0),
+        parseFloat(document.getElementById("cercado").value || 0),
+        parseFloat(document.getElementById("cameras").value || 0),
+        parseFloat(document.getElementById("placaSolar").value || 0),
+        parseFloat(document.getElementById("portaoEletronico").value || 0),
+        parseFloat(document.getElementById("divulgacao").value || 0)
+    ];
 
-    const impostosConstrucao = parseFloat(document.getElementById("impostosConstrucao").value) / 100;
-    const impostosVenda = parseFloat(document.getElementById("impostosVenda").value) / 100;
+    // Cálculo dos custos
+    const custoConstruir = custoPorMetro * metros;
+    const custosAdicionaisTotal = custosAdicionais.reduce((a, b) => a + b, 0);
+    const custoTotalObra = custoConstruir + custoTerreno + custosAdicionaisTotal;
 
-    const custoConstrucao = custoPorMetroQuadrado * metrosQuadrados;
-    const custosExtras = custoMobilario + custoPaisagismo + custoDesenho + cercado + cameras + placaSolar + portaoEletronico + divulgacao;
-    totalCusto = custoConstrucao + custoTerreno + custosExtras;
-    const precoVenda = totalCusto * 2;
-    const impostoVendaCalculado = precoVenda * impostosVenda;
+    // Cálculo dos impostos
+    const impostosConstrucao = custoTotalObra * 0.053; // INSS + ISS (5.3%)
+    const valorVenda = custoTotalObra * 2; // Preço de venda é o custo total acrescido de 100%
+    const impostosVenda = valorVenda * 0.0673; // ITBI + IRPJ + CSLL (6.73%)
+    const totalImpostos = impostosConstrucao + impostosVenda;
 
+    // Cálculo do lucro bruto e líquido
+    const lucroBruto = valorVenda - custoTotalObra;
+    const lucroLiquido = lucroBruto - totalImpostos;
+    const lucroMensal = lucroLiquido / 12;
+
+    // Exibindo os resultados com explicações
     document.getElementById("resultado").innerHTML = `
-        <b>Custo Total:</b> R$ ${totalCusto.toFixed(2)}<br>
-        <b>Preço de Venda:</b> R$ ${precoVenda.toFixed(2)}<br>
-        <b>Imposto sobre Venda:</b> R$ ${impostoVendaCalculado.toFixed(2)}
+        <div class="bloco"><strong>Custo de Construção:</strong> R$ ${custoConstruir.toFixed(2)}<br>
+        (Calculado como: Custo por Metro Quadrado x Metros Quadrados)</div>
+        
+        <div class="bloco"><strong>Custo do Terreno:</strong> R$ ${custoTerreno.toFixed(2)}</div>
+        
+        <div class="bloco"><strong>Custos Adicionais:</strong> R$ ${custosAdicionaisTotal.toFixed(2)}</div>
+        
+        <div class="bloco"><strong>Custo Total da Obra:</strong> R$ ${custoTotalObra.toFixed(2)}<br>
+        (Soma de todos os custos acima)</div>
+        
+        <div class="bloco"><strong>Preço de Venda:</strong> R$ ${valorVenda.toFixed(2)}<br>
+        (Custo Total da Obra acrescido de 100%)</div>
+        
+        <div class="bloco"><strong>Impostos de Construção:</strong> R$ ${impostosConstrucao.toFixed(2)}</div>
+        
+        <div class="bloco"><strong>Impostos sobre Venda:</strong> R$ ${impostosVenda.toFixed(2)}</div>
+        
+        <div class="bloco"><strong>Lucro Bruto:</strong> R$ ${lucroBruto.toFixed(2)}</div>
+        
+        <div class="bloco"><strong>Lucro Líquido:</strong> R$ ${lucroLiquido.toFixed(2)}<br>
+        (Valor de venda menos todos os custos e impostos)</div>
+        
+        <div class="bloco"><strong>Lucro Mensal:</strong> R$ ${lucroMensal.toFixed(2)}</div>
     `;
-    document.getElementById("detalhesCategorias").style.display = "block";
 }
 </script>
+
 </body>
 </html>
