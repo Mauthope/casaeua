@@ -13,15 +13,12 @@
             padding: 20px;
             background-color: #f7f7f7;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         h2 { text-align: center; }
         label { display: block; margin-top: 10px; }
-        input, select { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
-        button { margin-top: 20px; width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        .resultado { margin-top: 20px; background-color: #e9ecef; padding: 15px; border-radius: 5px; }
-        .bloco { background-color: #fff; margin-top: 10px; padding: 10px; border-radius: 5px; border-left: 5px solid #007bff; }
+        input, select { width: 100%; padding: 8px; margin-top: 5px; }
+        button { margin-top: 15px; padding: 10px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        .resultado, .detalhesCategorias { margin-top: 20px; padding: 20px; background-color: #e9ecef; border-radius: 10px; }
         table { width: 100%; margin-top: 20px; border-collapse: collapse; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
         th { background-color: #007bff; color: white; }
@@ -42,38 +39,19 @@
     <label>Custo do Terreno (R$):</label>
     <input type="number" id="custoTerreno" required>
     
-    <label>Categoria:</label>
-    <select id="categoria">
-        <option value="Desenho">Desenho</option>
-        <option value="Mobiliário">Mobiliário</option>
-        <option value="Paisagismo">Paisagismo</option>
-        <option value="Cercado">Cercado</option>
-        <option value="Câmeras">Câmeras</option>
-        <option value="Placa Solar">Placa Solar</option>
-        <option value="Portão Eletrônico">Portão Eletrônico</option>
-        <option value="Divulgação">Divulgação</option>
-    </select>
-    
-    <label>Valor (R$):</label>
-    <input type="number" id="valorCategoria">
-    
-    <button type="button" onclick="adicionarItem()">Adicionar Item</button>
     <button type="button" onclick="calcular()">Calcular Total</button>
 </form>
 
-<table id="tabelaItens">
-    <tr>
-        <th>Categoria</th>
-        <th>Valor (R$)</th>
-    </tr>
-</table>
+<div class="resultado" id="resultado" style="display: none;"></div>
 
-<div class="resultado" id="resultado"></div>
-
-<div id="detalhesCategorias" style="display: none;">
+<div id="detalhesCategorias" class="detalhesCategorias" style="display: none;">
     <h3>Adicionar Detalhes para Categoria</h3>
     <label>Selecionar Categoria:</label>
-    <select id="categoriaDetalhe"></select>
+    <select id="categoriaDetalhe">
+        <option value="Mobiliário">Mobiliário</option>
+        <option value="Paisagismo">Paisagismo</option>
+        <option value="Eletrônicos">Eletrônicos</option>
+    </select>
     
     <label>Item:</label>
     <input type="text" id="itemDetalhe">
@@ -81,7 +59,7 @@
     <label>Valor (R$):</label>
     <input type="number" id="valorDetalhe">
     
-    <button type="button" onclick="adicionarDetalhe()">Adicionar Detalhe</button>
+    <button type="button" onclick="adicionarDetalhe()">Adicionar Item</button>
 </div>
 
 <table id="tabelaDetalhes">
@@ -95,42 +73,40 @@
 <canvas id="graficoCategorias" width="400" height="200"></canvas>
 
 <script>
-let itens = [];
+let custos = {};
 let detalhes = {};
 
-function adicionarItem() {
-    const categoria = document.getElementById("categoria").value;
-    const valor = parseFloat(document.getElementById("valorCategoria").value);
-    if (!isNaN(valor) && valor > 0) {
-        itens.push({ categoria, valor });
-        atualizarTabela();
-        preencherCategoriasDetalhe();
-    }
-}
-
-function atualizarTabela() {
-    const tabela = document.getElementById("tabelaItens");
-    tabela.innerHTML = `<tr><th>Categoria</th><th>Valor (R$)</th></tr>`;
-    itens.forEach(item => {
-        tabela.innerHTML += `<tr><td>${item.categoria}</td><td>R$ ${item.valor.toFixed(2)}</td></tr>`;
-    });
-}
-
 function calcular() {
+    const custoPorMetroQuadrado = parseFloat(document.getElementById("custoPorMetroQuadrado").value);
+    const metrosQuadrados = parseFloat(document.getElementById("metrosQuadrados").value);
+    const custoTerreno = parseFloat(document.getElementById("custoTerreno").value);
+    
+    if (isNaN(custoPorMetroQuadrado) || isNaN(metrosQuadrados) || isNaN(custoTerreno)) return;
+    
+    const custoConstrucao = custoPorMetroQuadrado * metrosQuadrados;
+    const custoTotal = custoConstrucao + custoTerreno;
+    const precoVenda = custoTotal * 2;
+    const impostos = precoVenda * 0.15;
+    const lucroLiquido = precoVenda - custoTotal - impostos;
+    
+    custos = { custoConstrucao, custoTerreno, custoTotal, precoVenda, impostos, lucroLiquido };
+    
+    mostrarResultados();
     document.getElementById("detalhesCategorias").style.display = "block";
-    renderizarGrafico();
 }
 
-function preencherCategoriasDetalhe() {
-    const select = document.getElementById("categoriaDetalhe");
-    select.innerHTML = "";
-    itens.forEach(item => {
-        if (!detalhes[item.categoria]) detalhes[item.categoria] = [];
-        const option = document.createElement("option");
-        option.value = item.categoria;
-        option.textContent = item.categoria;
-        select.appendChild(option);
-    });
+function mostrarResultados() {
+    const resultadoDiv = document.getElementById("resultado");
+    resultadoDiv.style.display = "block";
+    resultadoDiv.innerHTML = `
+        <h3>Resultados</h3>
+        <p>Custo de Construção: R$ ${custos.custoConstrucao.toFixed(2)}</p>
+        <p>Custo do Terreno: R$ ${custos.custoTerreno.toFixed(2)}</p>
+        <p>Custo Total: R$ ${custos.custoTotal.toFixed(2)}</p>
+        <p>Preço de Venda: R$ ${custos.precoVenda.toFixed(2)}</p>
+        <p>Impostos (15%): R$ ${custos.impostos.toFixed(2)}</p>
+        <p>Lucro Líquido: R$ ${custos.lucroLiquido.toFixed(2)}</p>
+    `;
 }
 
 function adicionarDetalhe() {
@@ -138,19 +114,21 @@ function adicionarDetalhe() {
     const item = document.getElementById("itemDetalhe").value;
     const valor = parseFloat(document.getElementById("valorDetalhe").value);
     
-    if (!isNaN(valor) && item) {
+    if (!detalhes[categoria]) detalhes[categoria] = [];
+    if (item && !isNaN(valor)) {
         detalhes[categoria].push({ item, valor });
-        atualizarTabelaDetalhes(categoria);
+        atualizarTabelaDetalhes();
         renderizarGrafico();
     }
 }
 
-function atualizarTabelaDetalhes(categoria) {
+function atualizarTabelaDetalhes() {
     const tabela = document.getElementById("tabelaDetalhes");
     tabela.innerHTML = `<tr><th>Categoria</th><th>Item</th><th>Valor (R$)</th></tr>`;
-    Object.keys(detalhes).forEach(cat => {
-        detalhes[cat].forEach(detalhe => {
-            tabela.innerHTML += `<tr><td>${cat}</td><td>${detalhe.item}</td><td>R$ ${detalhe.valor.toFixed(2)}</td></tr>`;
+    
+    Object.keys(detalhes).forEach(categoria => {
+        detalhes[categoria].forEach(detalhe => {
+            tabela.innerHTML += `<tr><td>${categoria}</td><td>${detalhe.item}</td><td>R$ ${detalhe.valor.toFixed(2)}</td></tr>`;
         });
     });
 }
@@ -159,7 +137,7 @@ function renderizarGrafico() {
     const ctx = document.getElementById("graficoCategorias").getContext("2d");
     const categorias = Object.keys(detalhes);
     const valores = categorias.map(cat => detalhes[cat].reduce((acc, item) => acc + item.valor, 0));
-
+    
     new Chart(ctx, {
         type: 'bar',
         data: {
