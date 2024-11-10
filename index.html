@@ -102,9 +102,7 @@
 </form>
 
 <div class="resultado" id="resultado"></div>
-<canvas id="lucroGrafico"></canvas>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 function calcular() {
     const custoPorMetro = parseFloat(document.getElementById("custoPorMetroQuadrado").value);
@@ -121,28 +119,43 @@ function calcular() {
         parseFloat(document.getElementById("divulgacao").value || 0)
     ];
 
+    // Cálculo dos custos
     const custoConstruir = custoPorMetro * metros;
     const custosAdicionaisTotal = custosAdicionais.reduce((a, b) => a + b, 0);
     const custoTotalObra = custoConstruir + custoTerreno + custosAdicionaisTotal;
 
+    // Cálculo dos impostos
     const impostosConstrucao = custoTotalObra * 0.053; // INSS + ISS (5.3%)
     const valorVenda = custoTotalObra * 2;
     const impostosVenda = valorVenda * 0.0673; // ITBI + IRPJ + CSLL (6.73%)
-
     const totalImpostos = impostosConstrucao + impostosVenda;
+
+    // Cálculo do lucro bruto e líquido
     const lucroBruto = valorVenda - custoTotalObra;
     const lucroLiquido = lucroBruto - totalImpostos;
     const lucroMensal = lucroLiquido / 12;
 
+    // Exibindo os resultados com explicações
     document.getElementById("resultado").innerHTML = `
-        <div class="bloco"><strong>Custo de Construção:</strong> R$ ${custoConstruir.toFixed(2)}</div>
+        <div class="bloco"><strong>Custo de Construção:</strong> R$ ${custoConstruir.toFixed(2)}<br>
+        (Calculado como: Custo por Metro Quadrado x Metros Quadrados)</div>
+        
         <div class="bloco"><strong>Custo do Terreno:</strong> R$ ${custoTerreno.toFixed(2)}</div>
+        
         <div class="bloco"><strong>Custos Adicionais:</strong> R$ ${custosAdicionaisTotal.toFixed(2)}</div>
-        <div class="bloco"><strong>Custo Total da Obra:</strong> R$ ${custoTotalObra.toFixed(2)}</div>
+        
+        <div class="bloco"><strong>Custo Total da Obra:</strong> R$ ${custoTotalObra.toFixed(2)}<br>
+        (Soma de todos os custos acima)</div>
+        
         <div class="bloco"><strong>Impostos de Construção:</strong> R$ ${impostosConstrucao.toFixed(2)}</div>
+        
         <div class="bloco"><strong>Impostos sobre Venda:</strong> R$ ${impostosVenda.toFixed(2)}</div>
+        
         <div class="bloco"><strong>Lucro Bruto:</strong> R$ ${lucroBruto.toFixed(2)}</div>
-        <div class="bloco"><strong>Lucro Líquido:</strong> R$ ${lucroLiquido.toFixed(2)}</div>
+        
+        <div class="bloco"><strong>Lucro Líquido:</strong> R$ ${lucroLiquido.toFixed(2)}<br>
+        (Valor de venda menos todos os custos e impostos)</div>
+        
         <div class="bloco"><strong>Lucro Mensal:</strong> R$ ${lucroMensal.toFixed(2)}</div>
     `;
 }
