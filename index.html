@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 900px;
             margin: 20px auto;
             padding: 20px;
             background-color: #f7f7f7;
@@ -46,6 +46,13 @@
             background-color: #e9ecef;
             padding: 15px;
             border-radius: 5px;
+        }
+        .bloco {
+            background-color: #fff;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 5px solid #007bff;
         }
         canvas {
             margin-top: 20px;
@@ -100,7 +107,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 function calcular() {
-    // Captura dos valores
     const custoPorMetro = parseFloat(document.getElementById("custoPorMetroQuadrado").value);
     const metros = parseFloat(document.getElementById("metrosQuadrados").value);
     const custoTerreno = parseFloat(document.getElementById("custoTerreno").value);
@@ -115,48 +121,30 @@ function calcular() {
         parseFloat(document.getElementById("divulgacao").value || 0)
     ];
 
-    // Cálculos dos custos e impostos
-    const custoTotalObra = (custoPorMetro * metros) + custoTerreno + custosAdicionais.reduce((a, b) => a + b, 0);
-    const impostosConstrucao = custoTotalObra * 0.05; // 5% de impostos
-    const valorVenda = custoTotalObra * 2; // Margem de 100%
-    const impostosVenda = valorVenda * 0.04; // 4% de impostos
+    const custoConstruir = custoPorMetro * metros;
+    const custosAdicionaisTotal = custosAdicionais.reduce((a, b) => a + b, 0);
+    const custoTotalObra = custoConstruir + custoTerreno + custosAdicionaisTotal;
+
+    const impostosConstrucao = custoTotalObra * 0.053; // INSS + ISS (5.3%)
+    const valorVenda = custoTotalObra * 2;
+    const impostosVenda = valorVenda * 0.0673; // ITBI + IRPJ + CSLL (6.73%)
 
     const totalImpostos = impostosConstrucao + impostosVenda;
     const lucroBruto = valorVenda - custoTotalObra;
     const lucroLiquido = lucroBruto - totalImpostos;
     const lucroMensal = lucroLiquido / 12;
 
-    // Exibição dos resultados
     document.getElementById("resultado").innerHTML = `
-        <h3>Resultados:</h3>
-        <p><strong>Custo Total da Obra:</strong> R$ ${custoTotalObra.toFixed(2)}</p>
-        <p><strong>Impostos de Construção (5%):</strong> R$ ${impostosConstrucao.toFixed(2)}</p>
-        <p><strong>Impostos sobre Venda (4%):</strong> R$ ${impostosVenda.toFixed(2)}</p>
-        <p><strong>Lucro Bruto:</strong> R$ ${lucroBruto.toFixed(2)}</p>
-        <p><strong>Lucro Líquido:</strong> R$ ${lucroLiquido.toFixed(2)}</p>
-        <p><strong>Lucro Mensal:</strong> R$ ${lucroMensal.toFixed(2)}</p>
+        <div class="bloco"><strong>Custo de Construção:</strong> R$ ${custoConstruir.toFixed(2)}</div>
+        <div class="bloco"><strong>Custo do Terreno:</strong> R$ ${custoTerreno.toFixed(2)}</div>
+        <div class="bloco"><strong>Custos Adicionais:</strong> R$ ${custosAdicionaisTotal.toFixed(2)}</div>
+        <div class="bloco"><strong>Custo Total da Obra:</strong> R$ ${custoTotalObra.toFixed(2)}</div>
+        <div class="bloco"><strong>Impostos de Construção:</strong> R$ ${impostosConstrucao.toFixed(2)}</div>
+        <div class="bloco"><strong>Impostos sobre Venda:</strong> R$ ${impostosVenda.toFixed(2)}</div>
+        <div class="bloco"><strong>Lucro Bruto:</strong> R$ ${lucroBruto.toFixed(2)}</div>
+        <div class="bloco"><strong>Lucro Líquido:</strong> R$ ${lucroLiquido.toFixed(2)}</div>
+        <div class="bloco"><strong>Lucro Mensal:</strong> R$ ${lucroMensal.toFixed(2)}</div>
     `;
-
-    // Gráfico de projeção de lucro
-    const ctx = document.getElementById('lucroGrafico').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: Array.from({ length: 12 }, (_, i) => `Mês ${i + 1}`),
-            datasets: [{
-                label: 'Lucro Líquido Mensal',
-                data: Array(12).fill(lucroMensal),
-                borderColor: 'blue',
-                backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                fill: true,
-            }]
-        },
-        options: {
-            scales: {
-                y: { beginAtZero: true }
-            }
-        }
-    });
 }
 </script>
 
